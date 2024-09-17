@@ -155,6 +155,7 @@ impl Player {
 }
 
 
+#[derive(PartialEq)]
 pub enum GameState {
     None, BazaEnded, Continuation, Team0Won, Team1Won
 }
@@ -601,6 +602,19 @@ impl fmt::Display for Player {
         }).collect();
 
         write!(f, "Player {}, Team {}: [{}]", self.player_id, self.team_id, card_strings.join(", "))?;
+        Ok(())
+    }
+}
+
+impl fmt::Display for GameState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            GameState::None => write!(f, "None")?,
+            GameState::BazaEnded => write!(f, "BazaEnded")?,
+            GameState::Continuation => write!(f, "Continuation")?,
+            GameState::Team0Won => write!(f, "Team0Won")?,
+            GameState::Team1Won => write!(f, "Team1Won")?,
+        }
         Ok(())
     }
 }

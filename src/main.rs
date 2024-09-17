@@ -10,6 +10,7 @@ use std::io::{self, Write};
 use bot_behaviours::{random_bot::RandomBot, smart_bot::SmartBot};
 use game::{Board, GameState, Pal};
 use crate::bot_behaviour::Behaviour;
+use rand::{thread_rng, Rng};
 
 
 fn main() {
@@ -17,8 +18,7 @@ fn main() {
     let bot_1: SmartBot = SmartBot::new("smart1".to_string());
     let bot_2: RandomBot = RandomBot::new("random2".to_string());
     let bot_3: SmartBot = SmartBot::new("smart3".to_string());
-    let mut board: Board = Board::new(0);
-
+    
     let bots: Vec<Box<dyn Behaviour>> = vec![
         Box::new(bot_0), 
         Box::new(bot_1), 
@@ -26,26 +26,15 @@ fn main() {
         Box::new(bot_3)
     ];
 
-    loop {
-        match board.current_player {
-            0..=3 => match bots[board.current_player].play_card(&mut board) {
-                Ok(game_state) => match game_state {
-                    GameState::BazaEnded => post_baza_actions(&bots, &mut board),
-                    GameState::Continuation => println!("Continuació"),
-                    GameState::Team0Won | GameState::Team1Won => {
-                        println!("Game end");
-                        break;
-                    },
-                    _ => ()
-                },
-                Err(error) => println!("Error: {}", error)
-            }
-            _ => {
-                println!("Wrong player");
-                break;
-            }
-        }
+    let mut games: [GameState; 1000] = [const { GameState::None }; 1000];
+
+    for i in 0..games.len() {
+        let game_state: GameState = play_game(&bots);
+        games[i] = game_state;
     }
+
+    println!("Team 0 won: {}", games.iter().filter(|&g| g == &GameState::Team0Won).count());
+    println!("Team 1 won: {}", games.iter().filter(|&g| g == &GameState::Team1Won).count());
 
     // Player driver
     /* loop {
@@ -103,6 +92,31 @@ fn main() {
             }
         }
     } */
+}
+
+fn play_game(bots: &Vec<Box<dyn Behaviour>>) -> GameState {
+    let starting_player: usize = thread_rng().gen_range(0..=3);
+    let mut board: Board = Board::new(starting_player);
+
+    loop {
+        match board.current_player {
+            0..=3 => match bots[board.current_player].play_card(&mut board) {
+                Ok(game_state) => match game_state {
+                    GameState::BazaEnded => post_baza_actions(&bots, &mut board),
+                    GameState::Continuation => (),
+                    GameState::Team0Won | GameState::Team1Won => {
+                        return game_state;
+                    },
+                    _ => ()
+                },
+                Err(error) => println!("Error: {}", error)
+            }
+            _ => {
+                println!("Wrong player");
+                return GameState::None;
+            }
+        }
+    }
 }
 
 fn post_baza_actions(bots: &Vec<Box<dyn Behaviour>>, board: &mut Board) {
