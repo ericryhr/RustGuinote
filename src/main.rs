@@ -6,21 +6,23 @@ mod bot_behaviours {
     pub mod smart_bot;
 }
 
-use std::io::{self, Write};
 use bot_behaviours::{random_bot::RandomBot, smart_bot::SmartBot};
-use game::{Board, GameState, Pal};
+use game::{Board, GameState};
 use crate::bot_behaviour::Behaviour;
 use rand::{thread_rng, Rng};
 
 
 fn main() {
-    let bot_0: RandomBot = RandomBot::new("random".to_string());
-    let bot_1: SmartBot = SmartBot::new("smart1".to_string());
-    let bot_2: RandomBot = RandomBot::new("random2".to_string());
-    let bot_3: SmartBot = SmartBot::new("smart3".to_string());
+    // Team 0
+    let bot_0: RandomBot = RandomBot {};
+    let bot_2: RandomBot = RandomBot {};
+
+    // Team 1
+    let bot_1: SmartBot = SmartBot {};
+    let bot_3: SmartBot = SmartBot {};
     
     let bots: Vec<Box<dyn Behaviour>> = vec![
-        Box::new(bot_0), 
+        Box::new(bot_0),
         Box::new(bot_1), 
         Box::new(bot_2), 
         Box::new(bot_3)
@@ -33,8 +35,8 @@ fn main() {
         games[i] = game_state;
     }
 
-    println!("Team 0 won: {}", games.iter().filter(|&g| g == &GameState::Team0Won).count());
-    println!("Team 1 won: {}", games.iter().filter(|&g| g == &GameState::Team1Won).count());
+    println!("Team {} won: {}", bots[0].name(), games.iter().filter(|&g| g == &GameState::Team0Won).count());
+    println!("Team {} won: {}", bots[1].name(), games.iter().filter(|&g| g == &GameState::Team1Won).count());
 
     // Player driver
     /* loop {

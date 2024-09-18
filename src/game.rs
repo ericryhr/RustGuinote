@@ -284,6 +284,31 @@ impl Board {
         pals
     }
 
+    // TODO: No s'ha de poder canviar trumfo si s'acaba de robar a l'ultima baza abans de l'arrastre
+    pub fn is_canvi_trumfo_available(&self, player: usize) -> Result<(), String> {
+        if player >= 4 {
+            return Err("Invalid player index.".to_string());
+        }
+
+        // Nomes es pot canviar si s'ha guanyat l'ultima baza
+        if !self.player_team_won_last_baza(player) {
+            return Err("No es pot canviar trumfo si no és començament de baza o no ha guanyat la última baza.".to_string());
+        }
+
+        // No es pot fer en arrastre (be nomes abans de començarlo, per tant es pot saber pel nombre de cartes del jugador)
+        if self.players[player].hand.cards.len() < 6 {
+            return Err("No es pot canviar trumfo durant l'arrastre.".to_string());
+        }
+
+        // Comprovem que tingui la carta valida a la ma
+        let seven_card: Card = Card { pal: self.current_trumfo.pal, number: 7 };
+        if  !self.players[player].hand.cards.contains(&seven_card) {
+            return Err("No es pot canviar trumfo sense el 7 de trumfo a la mà.".to_string());
+        }
+
+        Ok(())
+    }
+
     ////////// CARD PLAYS //////////
 
     pub fn play_card(&mut self, index: usize) -> Result<GameState, String> {
@@ -392,7 +417,7 @@ impl Board {
     }
 
     pub fn change_trumfo_card(&mut self, player: usize) -> Result<(), String> {
-        match self.is_legal_canvi_trumfo(player) {
+        match self.is_canvi_trumfo_available(player) {
             Ok(()) => (),
             Err(error) => return Err(error)
         }
@@ -445,31 +470,6 @@ impl Board {
         if  !self.players[player].hand.cards.contains(&sota) ||
             !self.players[player].hand.cards.contains(&rey) {
             return Err("No es pot cantar sense la sota i el rey a la mà.".to_string());
-        }
-
-        Ok(())
-    }
-
-    // TODO: No s'ha de poder canviar trumfo si s'acaba de robar a l'ultima baza abans de l'arrastre
-    fn is_legal_canvi_trumfo(&self, player: usize) -> Result<(), String> {
-        if player >= 4 {
-            return Err("Invalid player index.".to_string());
-        }
-
-        // Nomes es pot canviar si s'ha guanyat l'ultima baza
-        if !self.player_team_won_last_baza(player) {
-            return Err("No es pot canviar trumfo si no és començament de baza o no ha guanyat la última baza.".to_string());
-        }
-
-        // No es pot fer en arrastre (be nomes abans de començarlo, per tant es pot saber pel nombre de cartes del jugador)
-        if self.players[player].hand.cards.len() < 6 {
-            return Err("No es pot canviar trumfo durant l'arrastre.".to_string());
-        }
-
-        // Comprovem que tingui la carta valida a la ma
-        let seven_card: Card = Card { pal: self.current_trumfo.pal, number: 7 };
-        if  !self.players[player].hand.cards.contains(&seven_card) {
-            return Err("No es pot canviar trumfo sense el 7 de trumfo a la mà.".to_string());
         }
 
         Ok(())
